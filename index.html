@@ -4,291 +4,433 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>スーパー・アイスクリッカー</title>
-    <style>
-        body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            text-align: center;
-            background-color: #f0f8ff;
-            margin: 0;
-            padding: 20px;
-            overflow-x: hidden;
-            position: relative;
-            min-height: 100vh;
-        }
-        #ice-cream {
-            font-size: 120px;
-            cursor: pointer;
-            user-select: none;
-            transition: transform 0.05s;
-            display: inline-block;
-            margin: 20px;
-        }
-        #ice-cream:active {
-            transform: scale(0.9);
-        }
-        /* ポップアップテキストのアニメーション */
-        .click-pop {
-            position: absolute;
-            font-weight: bold;
-            font-size: 24px;
-            color: #ff4500;
-            pointer-events: none;
-            animation: floatUp 0.8s ease-out forwards;
-        }
-        @keyframes floatUp {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(-100px) scale(1.2); }
-        }
-        /* ゴールデンアイスのスタイル */
-        .golden-ice {
-            position: absolute;
-            font-size: 50px;
-            cursor: pointer;
-            z-index: 100;
-            animation: spin 2s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(180deg) scale(1.3); }
-            100% { transform: rotate(360deg) scale(1); }
-        }
-        .container {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        .panel {
-            background: white;
-            border: 1px solid #ccc;
-            padding: 15px;
-            width: 320px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .shop-item, .achievement-item {
-            border-bottom: 1px dashed #eee;
-            padding: 10px 0;
-        }
-        .achievement-item.unlocked {
-            background-color: #e0f7fa;
-            color: #006064;
-        }
-        button {
-            padding: 6px 12px;
-            background-color: #ff69b4;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-        .system-btn {
-            background-color: #708090;
-            margin: 5px;
-        }
-    </style>
+    <!-- 外部のCSSファイルとJSファイルを読み込む設定 -->
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
 </head>
 <body>
 
     <h1>🍦 スーパー・アイスクリッカー 🍦</h1>
-    <h2>所持コイン: <span id="coin-count">0</span></h2>
-    <p>毎秒自動で増える量 (CPS): <span id="cps-count">0</span> | 現在のクリック力: <span id="power-count">1</span></p>
+    
+    <!-- ステータス表示エリア -->
+    <div class="status-box">
+        <div>所持コイン: <span id="coin-count" class="coin-highlight">0</span></div>
+        <div class="status-sub">
+            毎秒自動 (CPS): <span id="cps-count">0</span> | 
+            1クリックの力: <span id="power-count">1</span>
+        </div>
+    </div>
 
+    <br>
     <!-- メインのアイス -->
     <div id="ice-cream">🍦</div>
 
-    <div>
-        <button class="system-btn" onclick="saveGame()">手動セーブ</button>
-        <button class="system-btn" style="background-color: #cd5c5c;" onclick="resetGame()">データ初期化</button>
+    <!-- システムボタン -->
+    <div class="system-area">
+        <button class="system-btn" onclick="saveGame()">💾 手動セーブ</button>
+        <button class="system-btn reset-btn" onclick="resetGame()">🗑️ データ初期化</button>
     </div>
 
+    <!-- ショップと実績のコンテナ -->
     <div class="container">
-        <!-- ショップパネル -->
+        <!-- 🛒 ショップパネル -->
         <div class="panel">
-            <h3>🛒 ショップ</h3>
+            <h3>🛒 パワーアップショップ</h3>
+            
             <div class="shop-item">
-                <p>🍫 チョコトッピング (クリック力 +1)</p>
-                <p>価格: <span id="item1-cost">15</span> コイン</p>
+                <div class="item-info">
+                    <div class="item-title">🍫 チョコトッピング</div>
+                    <div class="item-cost">価格: <span id="item1-cost">15</span> コイン</div>
+                    <div class="item-effect">効果: クリック力 +1</div>
+                </div>
                 <button id="buy-item1" onclick="buyItem1()">購入</button>
             </div>
+
             <div class="shop-item">
-                <p>🤖 自動アイス製造機 (CPS +1)</p>
-                <p>価格: <span id="item2-cost">100</span> コイン</p>
+                <div class="item-info">
+                    <div class="item-title">🤖 自動アイス製造機</div>
+                    <div class="item-cost">価格: <span id="item2-cost">100</span> コイン</div>
+                    <div class="item-effect">効果: 毎秒自動でコイン +1</div>
+                </div>
                 <button id="buy-item2" onclick="buyItem2()">購入</button>
             </div>
         </div>
 
-        <!-- 実績パネル -->
+        <!-- 🏆 実績パネル -->
         <div class="panel">
-            <h3>🏆 実績 (解除でクリック力2倍)</h3>
+            <h3>🏆 達成実績 (解除でクリック力2倍!)</h3>
+            
             <div id="ach1" class="achievement-item">
-                <p>【ビギナー】100コイン到達</p>
+                <div class="item-info">
+                    <div class="item-title">🔰 ビギナー職人</div>
+                    <div class="item-condition">条件: 100コインに到達する</div>
+                </div>
+                <span id="ach1-status" class="ach-status">未達成</span>
             </div>
+
             <div id="ach2" class="achievement-item">
-                <p>【アイス職人】自動化機を5台保有</p>
+                <div class="item-info">
+                    <div class="item-title">🏭 大量生産の始まり</div>
+                    <div class="item-condition">条件: 自動製造機を5台買う</div>
+                </div>
+                <span id="ach2-status" class="ach-status">未達成</span>
             </div>
         </div>
     </div>
 
-    <script>
-        // --- ゲームデータ ---
-        let gameData = {
-            coins: 0,
-            baseClickPower: 1,
-            cps: 0,
-            item1Cost: 15,
-            item2Cost: 100,
-            item2Count: 0,
-            ach1Unlocked: false,
-            ach2Unlocked: false
-        };
-
-        // 実績による倍率計算
-        function getClickPower() {
-            let multiplier = 1;
-            if (gameData.ach1Unlocked) multiplier *= 2;
-            if (gameData.ach2Unlocked) multiplier *= 2;
-            return gameData.baseClickPower * multiplier;
-        }
-
-        // --- 画面表示の更新 ---
-        function updateDisplay() {
-            document.getElementById('coin-count').innerText = Math.floor(gameData.coins);
-            document.getElementById('cps-count').innerText = gameData.cps;
-            document.getElementById('power-count').innerText = getClickPower();
-            document.getElementById('item1-cost').innerText = gameData.item1Cost;
-            document.getElementById('item2-cost').innerText = gameData.item2Cost;
-
-            // ボタンの有効化制御
-            document.getElementById('buy-item1').disabled = gameData.coins < gameData.item1Cost;
-            document.getElementById('buy-item2').disabled = gameData.coins < gameData.item2Cost;
-
-            // 実績の見た目更新
-            if (gameData.ach1Unlocked) document.getElementById('ach1').classList.add('unlocked');
-            if (gameData.ach2Unlocked) document.getElementById('ach2').classList.add('unlocked');
-        }
-
-        // --- エフェクト演出 ---
-        function createPopEffect(x, y, text) {
-            const pop = document.createElement('div');
-            pop.className = 'click-pop';
-            pop.innerText = text;
-            pop.style.left = `${x}px`;
-            pop.style.top = `${y}px`;
-            document.body.appendChild(pop);
-            
-            setTimeout(() => pop.remove(), 800);
-        }
-
-        // --- メインのアイスクリック ---
-        document.getElementById('ice-cream').addEventListener('click', (e) => {
-            const power = getClickPower();
-            gameData.coins += power;
-            createPopEffect(e.pageX, e.pageY, `+${power}`);
-            checkAchievements();
-            updateDisplay();
-        });
-
-        // --- アイテム購入 ---
-        function buyItem1() {
-            if (gameData.coins >= gameData.item1Cost) {
-                gameData.coins -= gameData.item1Cost;
-                gameData.baseClickPower += 1;
-                gameData.item1Cost = Math.ceil(gameData.item1Cost * 1.15);
-                updateDisplay();
-            }
-        }
-
-        function buyItem2() {
-            if (gameData.coins >= gameData.item2Cost) {
-                gameData.coins -= gameData.item2Cost;
-                gameData.cps += 1;
-                gameData.item2Count += 1;
-                gameData.item2Cost = Math.ceil(gameData.item2Cost * 1.15);
-                checkAchievements();
-                updateDisplay();
-            }
-        }
-
-        // --- 実績チェック ---
-        function checkAchievements() {
-            if (!gameData.ach1Unlocked && gameData.coins >= 100) {
-                gameData.ach1Unlocked = true;
-                alert('🏆 実績解除: 100コイン到達！クリック力が2倍になった！');
-            }
-            if (!gameData.ach2Unlocked && gameData.item2Count >= 5) {
-                gameData.ach2Unlocked = true;
-                alert('🏆 実績解除: アイス職人！クリック力がさらに2倍になった！');
-            }
-        }
-
-        // --- ゴールデンアイス（ランダムイベント） ---
-        function spawnGoldenIce() {
-            const golden = document.createElement('div');
-            golden.className = 'golden-ice';
-            golden.innerText = '🌟🍦🌟';
-            
-            // 画面内のランダムな位置に配置
-            golden.style.left = Math.random() * (window.innerWidth - 100) + 'px';
-            golden.style.top = Math.random() * (window.innerHeight - 100) + 'px';
-            
-            golden.addEventListener('click', (e) => {
-                // 所持金の10%（最低でも50コイン）をボーナス
-                const bonus = Math.max(50, Math.floor(gameData.coins * 0.1));
-                gameData.coins += bonus;
-                createPopEffect(e.pageX, e.pageY, `✨ボーナス +${bonus}✨`);
-                golden.remove();
-                updateDisplay();
-            });
-
-            document.body.appendChild(golden);
-            // 8秒クリックされなかったら消滅
-            setTimeout(() => { golden.remove(); }, 8000);
-        }
-        // 15秒〜30秒のランダムな間隔でゴールデンアイスを出現させる
-        setInterval(() => {
-            if (Math.random() > 0.5) spawnGoldenIce();
-        }, 15000);
-
-        // --- 自動化（CPS）と自動セーブ ---
-        setInterval(() => {
-            if (gameData.cps > 0) {
-                gameData.coins += gameData.cps;
-                checkAchievements();
-                updateDisplay();
-            }
-        }, 1000);
-
-        // 30秒ごとにオートセーブ
-        setInterval(saveGame, 30000);
-
-        // --- セーブ＆ロードシステム ---
-        function saveGame() {
-            localStorage.setItem('iceClickerSave', JSON.stringify(gameData));
-        }
-
-        function loadGame() {
-            const savedData = localStorage.getItem('iceClickerSave');
-            if (savedData) {
-                gameData = JSON.parse(savedData);
-                updateDisplay();
-            }
-        }
-
-        function resetGame() {
-            if (confirm('本当にゲームデータをリセットしますか？')) {
-                localStorage.removeItem('iceClickerSave');
-                location.reload();
-            }
-        }
-
-        // ページを開いたときにセーブデータを読み込む
-        loadGame();
-    </script>
 </body>
 </html>
+/* 画面全体の共通デザイン */
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    text-align: center;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    margin: 0;
+    padding: 20px;
+    overflow-x: hidden;
+    position: relative;
+    min-height: 100vh;
+    color: #333;
+}
+
+h1 {
+    color: #ff4500;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+/* ステータス表示 */
+.status-box {
+    background: rgba(255, 255, 255, 0.8);
+    padding: 15px;
+    border-radius: 15px;
+    display: inline-block;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+
+.coin-highlight {
+    font-size: 32px;
+    color: #ff69b4;
+    font-weight: bold;
+}
+
+.status-sub {
+    margin-top: 5px;
+    font-size: 14px;
+    color: #555;
+}
+
+.status-sub span {
+    font-weight: bold;
+}
+
+/* メインのアイスクリーム */
+#ice-cream {
+    font-size: 140px;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.05s;
+    display: inline-block;
+    margin: 10px;
+    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.15));
+}
+
+#ice-cream:active {
+    transform: scale(0.85) rotate(-5deg);
+}
+
+/* クリックした時のポップアップ数字 */
+.click-pop {
+    position: absolute;
+    font-weight: bold;
+    font-size: 28px;
+    color: #ff4500;
+    text-shadow: 2px 2px 0px #fff;
+    pointer-events: none;
+    animation: floatUp 0.8s ease-out forwards;
+    z-index: 200;
+}
+
+@keyframes floatUp {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-120px) scale(1.3); }
+}
+
+/* 黄金のレアアイス */
+.golden-ice {
+    position: absolute;
+    font-size: 60px;
+    cursor: pointer;
+    z-index: 100;
+    animation: goldenSpin 1.5s linear infinite;
+    filter: drop-shadow(0 0 20px #ffd700);
+}
+
+@keyframes goldenSpin {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.4); }
+    100% { transform: rotate(360deg) scale(1); }
+}
+
+/* レイアウト配置 */
+.system-area {
+    margin-top: 10px;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    flex-wrap: wrap;
+    margin-top: 30px;
+}
+
+.panel {
+    background: white;
+    padding: 20px;
+    width: 340px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.panel h3 {
+    margin-top: 0;
+    border-bottom: 3px solid #ff69b4;
+    padding-bottom: 8px;
+    color: #ff69b4;
+}
+
+/* ショップと実績のアイテム枠 */
+.shop-item, .achievement-item {
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 12px 0;
+    text-align: left;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.item-title { font-weight: bold; color: #333; }
+.item-cost { color: #888; font-size: 13px; margin: 2px 0; }
+.item-effect { font-size: 11px; color:#ff69b4; margin: 2px 0; }
+.item-condition { font-size: 12px; margin: 2px 0; }
+.ach-status { font-size: 12px; }
+
+/* 実績ロック解除時の見た目 */
+.achievement-item {
+    opacity: 0.5;
+    transition: all 0.3s;
+    background: #eaeaea;
+}
+
+.achievement-item.unlocked {
+    opacity: 1;
+    background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+    border: 2px solid #00bcd4;
+    color: #006064;
+    font-weight: bold;
+    transform: scale(1.02);
+}
+
+/* ボタンの共通デザイン */
+button {
+    padding: 8px 16px;
+    background: linear-gradient(to bottom, #ff69b4, #ff1493);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: background 0.2s;
+}
+
+button:hover:not(:disabled) {
+    background: linear-gradient(to bottom, #ff85c2, #ff2a9d);
+}
+
+button:disabled {
+    background: #ccc;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.system-btn {
+    background: #708090;
+    margin: 5px;
+    border-radius: 5px;
+    font-size: 12px;
+    padding: 5px 10px;
+    box-shadow: none;
+}
+
+.reset-btn {
+    background: #cd5c5c;
+}
+// --- ゲームの初期データ ---
+let gameData = {
+    coins: 0,
+    baseClickPower: 1,
+    cps: 0,
+    item1Cost: 15,
+    item2Cost: 100,
+    item2Count: 0,
+    ach1Unlocked: false,
+    ach2Unlocked: false
+};
+
+// 実績（アチーブメント）によるクリック倍率の計算
+function getClickPower() {
+    let multiplier = 1;
+    if (gameData.ach1Unlocked) multiplier *= 2;
+    if (gameData.ach2Unlocked) multiplier *= 2;
+    return gameData.baseClickPower * multiplier;
+}
+
+// --- 画面表示を最新にする関数 ---
+function updateDisplay() {
+    document.getElementById('coin-count').innerText = Math.floor(gameData.coins);
+    document.getElementById('cps-count').innerText = gameData.cps;
+    document.getElementById('power-count').innerText = getClickPower();
+    document.getElementById('item1-cost').innerText = gameData.item1Cost;
+    document.getElementById('item2-cost').innerText = gameData.item2Cost;
+
+    // ボタンを買えるかどうかで有効・無効化
+    document.getElementById('buy-item1').disabled = gameData.coins < gameData.item1Cost;
+    document.getElementById('buy-item2').disabled = gameData.coins < gameData.item2Cost;
+
+    // 実績が解除されていたら見た目を変更
+    if (gameData.ach1Unlocked) {
+        document.getElementById('ach1').classList.add('unlocked');
+        document.getElementById('ach1-status').innerText = '🎉 解除!';
+    }
+    if (gameData.ach2Unlocked) {
+        document.getElementById('ach2').classList.add('unlocked');
+        document.getElementById('ach2-status').innerText = '🎉 解除!';
+    }
+}
+
+// --- クリックエフェクト（数字が飛び出す演出） ---
+function createPopEffect(x, y, text) {
+    const pop = document.createElement('div');
+    pop.className = 'click-pop';
+    pop.innerText = text;
+    pop.style.left = `${x}px`;
+    pop.style.top = `${y}px`;
+    document.body.appendChild(pop);
+    
+    // 0.8秒後に画面から消す
+    setTimeout(() => pop.remove(), 800);
+}
+
+// --- メインのアイスをクリックした時 ---
+document.getElementById('ice-cream').addEventListener('click', (e) => {
+    const power = getClickPower();
+    gameData.coins += power;
+    createPopEffect(e.pageX, e.pageY, `+${power}`);
+    checkAchievements();
+    updateDisplay();
+});
+
+// --- アイテム1（チョコ）の購入 ---
+function buyItem1() {
+    if (gameData.coins >= gameData.item1Cost) {
+        gameData.coins -= gameData.item1Cost;
+        gameData.baseClickPower += 1;
+        gameData.item1Cost = Math.ceil(gameData.item1Cost * 1.15); // 15%値上げ
+        updateDisplay();
+    }
+}
+
+// --- アイテム2（自動製造機）の購入 ---
+function buyItem2() {
+    if (gameData.coins >= gameData.item2Cost) {
+        gameData.coins -= gameData.item2Cost;
+        gameData.cps += 1;
+        gameData.item2Count += 1;
+        gameData.item2Cost = Math.ceil(gameData.item2Cost * 1.15); // 15%値上げ
+        checkAchievements();
+        updateDisplay();
+    }
+}
+
+// --- 実績の達成チェック ---
+function checkAchievements() {
+    if (!gameData.ach1Unlocked && gameData.coins >= 100) {
+        gameData.ach1Unlocked = true;
+        updateDisplay();
+    }
+    if (!gameData.ach2Unlocked && gameData.item2Count >= 5) {
+        gameData.ach2Unlocked = true;
+        updateDisplay();
+    }
+}
+
+// --- レアイベント：ゴールデンアイスの出現 ---
+function spawnGoldenIce() {
+    const golden = document.createElement('div');
+    golden.className = 'golden-ice';
+    golden.innerText = '✨🍦✨';
+    
+    // 画面のランダムな場所に配置
+    golden.style.left = Math.random() * (window.innerWidth - 100) + 'px';
+    golden.style.top = Math.random() * (window.innerHeight - 100) + 'px';
+    
+    // クリックされたらボーナス獲得
+    golden.addEventListener('click', (e) => {
+        const bonus = Math.max(50, Math.floor(gameData.coins * 0.15));
+        gameData.coins += bonus;
+        createPopEffect(e.pageX, e.pageY, `👑 BONUS +${bonus} 👑`);
+        golden.remove();
+        updateDisplay();
+    });
+
+    document.body.appendChild(golden);
+    
+    // 8秒間クリックされなかったら自動で消える
+    setTimeout(() => { if(golden) golden.remove(); }, 8000);
+}
+
+// 12秒ごとに40%の確率でゴールデンアイスを出現させる
+setInterval(() => {
+    if (Math.random() > 0.4) spawnGoldenIce();
+}, 12000);
+
+// --- タイマー処理：1秒ごとに自動でコインを増やす ---
+setInterval(() => {
+    if (gameData.cps > 0) {
+        gameData.coins += gameData.cps;
+        checkAchievements();
+        updateDisplay();
+    }
+}, 1000);
+
+// 10秒ごとに自動セーブするタイマー
+setInterval(saveGame, 10000);
+
+// --- セーブ、ロード、リセットシステム ---
+function saveGame() {
+    localStorage.setItem('iceClickerSaveSplit', JSON.stringify(gameData));
+}
+
+function loadGame() {
+    const savedData = localStorage.getItem('iceClickerSaveSplit');
+    if (savedData) {
+        gameData = JSON.parse(savedData);
+        updateDisplay();
+    }
+}
+
+function resetGame() {
+    if (confirm('本当にゲームデータをリセットしますか？')) {
+        localStorage.removeItem('iceClickerSaveSplit');
+        location.reload();
+    }
+}
+
+// ゲーム起動時に自動でセーブデータを読み込む
+loadGame();
+updateDisplay();
